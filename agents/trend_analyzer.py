@@ -16,7 +16,7 @@ from langchain.tools import tool
 # llm_with_tool = llm.bind_tools(tools=[tavily])
 
 
-search = GoogleSerperAPIWrapper()  # Ensure SERPER_API_KEY is set
+search = GoogleSerperAPIWrapper()
 
 
 @tool
@@ -28,14 +28,16 @@ def get_latest_social_media_trend(query: str) -> str:
 
 tools = [get_latest_social_media_trend]
 llm_with_tool = llm.bind_tools(tools=tools)
+result = llm_with_tool.invoke("latest social media trend")
+print(result)
 
 
 def analyze_trend(state: dict) -> dict:
-    query = "latest high-impact social media trends 2025 of twitter"
+    query = "Short-form Video Domination:"
     prompt = (
         "fetch one of the latest as of current high-impact social media trend "
         "Respond with only the trend title for {query}, e.g., 'Short-Form Video Dominates','Enhanced Content Creation'."
     )
     response = llm_with_tool.invoke(prompt)
-    trend = response.content.strip()
+    trend = response.content
     return {**state, "trend": trend}

@@ -5,8 +5,12 @@ def grade_content(state: dict) -> dict:
     content = state.get("content", "")
 
     prompt = (
-        f"Evaluate this social media desciption or content for clarity, creativity, and engagement. "
-        f"Return a number from 0 to 100 only do not return any floating point number.:\n\n{content}"
+        f"Evaluate the following social media description or content. Grade it from 0 to 100 (integer only, no decimals) based on the following three criteria:\n"
+        f"1. Clarity: Is the message easy to read and free of grammar or spelling errors?\n"
+        f"2. Creativity: Is the content original, catchy, or emotionally appealing?\n"
+        f"3. Engagement: Does it include a call to action, question, or hook that encourages interaction?\n\n"
+        f"Content:\n{content}\n\n"
+        f"Only return the final score as a whole number from 0 to 100."
     )
     response = llm.invoke(prompt)
 

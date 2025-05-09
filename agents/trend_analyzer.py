@@ -14,12 +14,12 @@ search = GoogleSerperAPIWrapper()
 def analyze_trend(state: dict) -> dict:
 
     result = search.run(
-        "provide me latest news or trends on social media of india in may 2025")
+        "provide me top 5 latest news or trends on social media of india in 2010")
 
     prompt = (
         "From the following search result text, extract the single most recent and impactful social media trend "
         "as a short title. Respond with only the trend title, no explanation.\n\n"
-        f"{result}"
+        f"{result},e.g., 'Short-Form Video Dominates','Enhanced Content Creation'."
     )
 
     response = llm.invoke(prompt)

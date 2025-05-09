@@ -13,7 +13,9 @@ def generate_content(state: dict) -> dict:
         f"- Be relevant to the trend and the target audience\n"
         f"- use of emojis and hashtags is encouraged\n"
         f"- Be suitable for Instagram, Twitter, or LinkedIn depending on tone\n"
+        f"- e.g.,'👀 Blink and it's viral! 📱 Short-form video is rewriting the rules of engagement. Are you creating scroll-stopping content or just watching it fly by? ⚡👇 #ShortFormTakeover #VideoMarketing #ContentGame #SocialMediaTrends' "
         f"\nReturn only the description, no explanation or formatting."
+
     )
 
     response = llm.invoke(prompt)

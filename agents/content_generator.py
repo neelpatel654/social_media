@@ -30,7 +30,7 @@ def generate_content(state: dict) -> dict:
 
     )
 
-    response = llm_with_tool.invoke(prompt)
+    response = llm.invoke(prompt)
 
     content = response.content.strip()
 

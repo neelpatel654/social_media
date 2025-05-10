@@ -1,4 +1,4 @@
-# from llm_model.gemini_model import llm
+
 from unittest import result
 from urllib import response
 from click import prompt
@@ -23,16 +23,19 @@ search = GoogleTrendsQueryRun(
 
 def analyze_trend(state: dict) -> dict:
     result = search.run("India May 2025")
-    prompt = ("from the following search result text, extract the single most recent and rapidly rising social media trend, based on either a sudden spike in trend values or a sharp rise in related query frequency."
-              "Return only a concise and relevant trend title. Do not include any explanation or extra text."
-              f"{result}, e.g., 'India-Pakistan War', 'May 2025 Travel Surge','IPL 2025' "
-              )
+    prompt = (
+        "From the following Google Trends search result text, extract the top 5 most recent and rapidly rising social media trends. "
+        "Base your selection on a sudden spike in trend values or sharp increases in related query frequency. "
+        "Return only a list of 5 concise trend titles, separated by commas. Do not include any explanation or extra text.\n\n"
+        f"{result}\n\n"
+        "Example output: 'India-Pakistan War, May 2025 Travel Surge, IPL 2025, Election Results 2025, Heatwave Alerts'"
+    )
 
     response = llm.invoke(prompt)
-    trend = response.content.strip().strip('"').strip("'")
-    print("trend is: ==========================>", trend)
+    trends = [t.strip(" \"'") for t in response.content.strip().split(",")][:5]
+    print("trends are: ==========================>", trends)
 
-    return {**state, "trend": trend}
+    return {**state, "trends": trends}
 
 ##################################################################################################################################################
 

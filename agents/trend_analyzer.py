@@ -32,8 +32,9 @@ Given a user's query, return only the one word trend title or topic — concise,
 
     optimized_response = llm.invoke([system_message, human_message])
     optimized_web_request = optimized_response.content
-    print("[OPTIMIZE QUERIES] Optimized request:", optimized_web_request)
-    get_google_trends(optimized_web_request)
+    print("[OPTIMIZE QUERIES] Optimized request:>>>>>>>>>>>>>>>>>>>>",
+          optimized_web_request)
+    return get_google_trends.invoke(optimized_web_request)
 
 
 @tool(parse_docstring=True)
@@ -56,65 +57,36 @@ def get_google_trends(keyword: str) -> dict:
             - 'average_value' (float): Average trend value
             - 'percent_change' (float): Percent change over the period
     """
+    print("before result----------->>>>>>>>>>>>", keyword)
     result = search.run(keyword)
+    print("after result----------->>>>>>>>>>>>", result)
 
-    rising_queries, top_queries, trend_values = [], [], []
-    date_from, date_to = "", ""
-    min_value, max_value, avg_value, percent_change = 0, 0, 0.0, 0.0
+    top_queries = []
 
     for line in result.split('\n'):
         line = line.strip()
-        if line.startswith("Date From:"):
-            date_from = line.replace("Date From:", "").strip()
-        elif line.startswith("Date To:"):
-            date_to = line.replace("Date To:", "").strip()
-        elif line.startswith("Min Value:"):
-            min_value = int(float(line.replace("Min Value:", "").strip()))
-        elif line.startswith("Max Value:"):
-            max_value = int(float(line.replace("Max Value:", "").strip()))
-        elif line.startswith("Average Value:"):
-            avg_value = float(line.replace("Average Value:", "").strip())
-        elif line.startswith("Percent Change:"):
-            percent_change = float(line.replace(
-                "Percent Change:", "").replace("%", "").strip())
-        elif line.startswith("Trend values:"):
-            trend_values = [int(val.strip()) for val in line.replace(
-                "Trend values:", "").split(",")]
-        elif line.startswith("Rising Related Queries:"):
-            rising_queries = [q.strip() for q in line.replace(
-                "Rising Related Queries:", "").split(",")]
-        elif line.startswith("Top Related Queries:"):
+        if line.startswith("Rising Related Queries:"):
             top_queries = [q.strip() for q in line.replace(
-                "Top Related Queries:", "").split(",")]
-
-    return {
-        "top_related_queries": top_queries[:5],
-        "rising_related_queries": rising_queries[:5],
-        "trend_values": trend_values,
-        "date_from": date_from,
-        "date_to": date_to,
-        "min_value": min_value,
-        "max_value": max_value,
-        "average_value": avg_value,
-        "percent_change": percent_change
-    }
+                "Rising Related Queries:", "").split(",")]
+    print("trends----------------->>>>>>>>>>>>>>>>>>", top_queries[:5])
+    return top_queries[:5]
 
 
-def analyze_trend(state: dict) -> dict:
-    result = search.run("India May 2025")
-    prompt = (
-        "From the following Trends search result text, extract the top 5 most recent and rapidly rising social media trends according to . "
-        "Base your selection on a sudden spike in trend values or sharp increases in related query frequency. "
-        "Return only a list of 5 concise trend titles, separated by commas. Do not include any explanation or extra text.\n\n"
-        f"{result}\n\n"
-        "Example output: 'India-Pakistan War, May 2025 Travel Surge, IPL 2025, Election Results 2025, Heatwave Alerts'"
-    )
+# def analyze_trend(state: dict) -> dict:
+#     result = search.run("India May 2025")
+#     prompt = (
+#         "From the following Trends search result text, extract the top 5 most recent and rapidly rising social media trends according to . "
+#         "Base your selection on a sudden spike in trend values or sharp increases in related query frequency. "
+#         "Return only a list of 5 concise trend titles, separated by commas. Do not include any explanation or extra text.\n\n"
+#         f"{result}\n\n"
+#         "Example output: 'India-Pakistan War, May 2025 Travel Surge, IPL 2025, Election Results 2025, Heatwave Alerts'"
+#     )
 
-    response = llm.invoke(prompt)
-    trends = [t.strip(" \"'") for t in response.content.strip().split(",")][:5]
-    print("trends are: ==========================>", trends)
+#     response = llm.invoke(prompt)
+#     trends = [t.strip(" \"'") for t in response.content.strip().split(",")][:5]
+#     print("trends are: ==========================>", trends)
 
-    return {**state, "trends": trends}
+#     return {**state, "trends": trends}
 
 ##################################################################################################################################################
 

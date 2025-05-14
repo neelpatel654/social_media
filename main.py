@@ -1,10 +1,14 @@
+from functools import partial
+from logging import config
 from langchain_core.messages import HumanMessage
-from llm import content_grader_model
 from fastapi import FastAPI, HTTPException
 from typing import Optional
 from pydantic import BaseModel
 from graph.workflow import build_workflow
 from agents.trend_analyzer import get_top_trends_for_query
+import uuid
+from langgraph.types import Command
+
 app = FastAPI(
     title="Social Media",
     description="Multi agent workflow for trend analyzing,content generation and content grading.",
@@ -17,23 +21,54 @@ workflow = build_workflow()
 class TrendInput(BaseModel):
     query: Optional[str] = None
     selected_trend: Optional[str] = None
+    run_id: Optional[str] = None
+
+
+session_store = {}
 
 
 @app.post("/run")
 async def run_workflow(input_data: TrendInput):
     try:
         if input_data.query and not input_data.selected_trend:
-            top_trends = get_top_trends_for_query(input_data.query)
-            return {"top_trends": top_trends}
-        elif input_data.selected_trend:
 
-            initial_state = {"trend": input_data.selected_trend}
-            result = workflow.invoke(initial_state)
+            run_id = "123"
+
+            top_trends = get_top_trends_for_query(input_data.query)
+            print("top trends------------->>>>>>>>>>>>>>>>>>", top_trends)
+            partial_state = workflow.invoke(
+                input={"query": input_data.query, "trends": top_trends}, config={"run_id": run_id, "thread_id": run_id})
+
+            session_store[run_id] = partial_state
+            print("first---------->>>>>")
+            return {"run_id": run_id,
+                    "top_trends": top_trends,
+                    "message": "Select one trend and call again with selected_trend and run_id"}
+
+        elif input_data.selected_trend and input_data.run_id:
+
+            print("before run_id------------->>>>>>>>>>>>>>>>>>", input_data.run_id)
+            run_id = input_data.run_id
+            print("after run_id------------->>>>>>>>>>>>>>>>>>", run_id)
+            paused_state = session_store.get(run_id)
+            print("hello---------->>>>>>>>>>>>>")
+            if not paused_state:
+                raise HTTPException(status_code=400, detail="Invalid run_id")
+
+            final_result = workflow.invoke(
+                Command(resume={"trend": input_data.selected_trend}),
+                config={"run_id": run_id, "thread_id": run_id}
+                # state=paused_state
+            )
+            print("before delete------------->>>>>>>>>>>>>>>>>>")
+            del session_store[run_id]
+            print("after delete------------->>>>>>>>>>>>>>>>>>")
+
             return {
-                "trend": result.get("trend"),
-                "content": result.get("content"),
-                "grade": result.get("grade"),
-                "approved": result.get("grade", 0) >= 80,
+                "trend": final_result.get("trend"),
+                "content": final_result.get("content"),
+                "grade": final_result.get("grade"),
+                "approved": final_result.get("grade", 0) >= 80,
             }
         else:
             raise HTTPException(
